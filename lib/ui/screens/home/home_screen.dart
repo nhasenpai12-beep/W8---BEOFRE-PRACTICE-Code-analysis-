@@ -1,6 +1,7 @@
 import 'package:blabla/main_common.dart';
 import 'package:blabla/model/ride_pref/ride_pref.dart';
 import 'package:flutter/material.dart';
+import '../../states/ride_preferences_state.dart';
 import '../../../utils/animations_util.dart';
 import '../../theme/theme.dart';
 import '../../widgets/pickers/ride_preference/bla_ride_preference_picker.dart';
@@ -16,7 +17,12 @@ const String blablaHomeImagePath = 'assets/images/blabla_home.png';
 ///
 class HomeScreen extends StatefulWidget {
   final ServiceLocator serviceLocator;
-  const HomeScreen({super.key, required this.serviceLocator});
+  final RidePreferencesState ridePreferencesState;
+  const HomeScreen({
+    super.key,
+    required this.serviceLocator,
+    required this.ridePreferencesState,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -30,30 +36,41 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    widget.ridePreferencesState.addListener(_onRidePreferencesChanged);
     _loadPreferences();
   }
 
-  Future<void> _loadPreferences() async {
-    final repo = widget.serviceLocator.ridePreferenceRepository;
-    final selected = await repo.getSelectedPreference();
-    final history = await repo.getPreferenceHistory();
+  @override
+  void dispose() {
+    widget.ridePreferencesState.removeListener(_onRidePreferencesChanged);
+    super.dispose();
+  }
 
-    if (!mounted) return;
+  void _onRidePreferencesChanged() {
     setState(() {
-      _selectedPreference = selected;
-      _preferenceHistory = history;
+      _selectedPreference = widget.ridePreferencesState.selectedPreference;
+      _preferenceHistory = widget.ridePreferencesState.preferenceHistory;
     });
   }
 
+  Future<void> _loadPreferences() async {
+    await widget.ridePreferencesState.load();
+
+    if (!mounted) return;
+    _onRidePreferencesChanged();
+  }
+
   void onRidePrefSelected(RidePreference selectedPreference) async {
-    // 1- Save the preference via repository
-    await widget.serviceLocator.ridePreferenceRepository
-        .savePreference(selectedPreference);
+    // 1- Save the preference via global state
+    await widget.ridePreferencesState.selectPreference(selectedPreference);
 
     // 2 - Navigate to the rides screen
     await Navigator.of(context).push(
       AnimationUtils.createBottomToTopRoute(
-        RidesSelectionScreen(serviceLocator: widget.serviceLocator),
+        RidesSelectionScreen(
+          serviceLocator: widget.serviceLocator,
+          ridePreferencesState: widget.ridePreferencesState,
+        ),
       ),
     );
 

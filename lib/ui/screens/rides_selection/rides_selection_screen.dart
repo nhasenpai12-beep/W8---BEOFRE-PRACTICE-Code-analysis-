@@ -4,6 +4,7 @@ import '../../../model/ride_pref/ride_pref.dart';
 import '../../../utils/animations_util.dart' show AnimationUtils;
 import '../../theme/theme.dart';
 import '../../widgets/pickers/location/bla_ride_preference_modal.dart';
+import '../../states/ride_preferences_state.dart';
 import 'widgets/rides_selection_header.dart';
 import 'widgets/rides_selection_tile.dart';
 import 'package:blabla/main_common.dart';
@@ -15,7 +16,12 @@ import 'package:blabla/main_common.dart';
 ///
 class RidesSelectionScreen extends StatefulWidget {
   final ServiceLocator serviceLocator;
-  const RidesSelectionScreen({super.key, required this.serviceLocator});
+  final RidePreferencesState ridePreferencesState;
+  const RidesSelectionScreen({
+    super.key,
+    required this.serviceLocator,
+    required this.ridePreferencesState,
+  });
 
   @override
   State<RidesSelectionScreen> createState() => _RidesSelectionScreenState();
@@ -29,14 +35,25 @@ class _RidesSelectionScreenState extends State<RidesSelectionScreen> {
   @override
   void initState() {
     super.initState();
+    widget.ridePreferencesState.addListener(_onRidePreferencesChanged);
+    _loadData();
+  }
+
+  @override
+  void dispose() {
+    widget.ridePreferencesState.removeListener(_onRidePreferencesChanged);
+    super.dispose();
+  }
+
+  void _onRidePreferencesChanged() {
     _loadData();
   }
 
   Future<void> _loadData() async {
-    final prefsRepo = widget.serviceLocator.ridePreferenceRepository;
     final ridesRepo = widget.serviceLocator.ridesRepository;
 
-    final selected = await prefsRepo.getSelectedPreference();
+    await widget.ridePreferencesState.load();
+    final selected = widget.ridePreferencesState.selectedPreference;
     if (selected == null) {
       if (!mounted) return;
       setState(() {
@@ -87,8 +104,7 @@ class _RidesSelectionScreenState extends State<RidesSelectionScreen> {
 
     if (newPreference != null) {
       // 2 - Ask the service to update the current preference
-      await widget.serviceLocator.ridePreferenceRepository
-          .savePreference(newPreference);
+      await widget.ridePreferencesState.selectPreference(newPreference);
 
       // 3 -   Update the widget state  - TODO Improve this with proper state managagement
       await _loadData();
