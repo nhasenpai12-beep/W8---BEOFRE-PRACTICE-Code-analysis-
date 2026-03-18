@@ -1,10 +1,9 @@
 import 'package:blabla/main_common.dart';
-import 'package:blabla/model/ride/locations.dart';
 import 'package:blabla/model/ride_pref/ride_pref.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/animations_util.dart';
 import '../../theme/theme.dart';
-import '../../widgets/pickers/bla_ride_preference_picker.dart';
+import '../../widgets/pickers/ride_preference/bla_ride_preference_picker.dart';
 import '../rides_selection/rides_selection_screen.dart';
 import 'widgets/home_history_tile.dart';
 
@@ -26,7 +25,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   RidePreference? _selectedPreference;
   List<RidePreference> _preferenceHistory = [];
-  List<Location> _availableLocations = [];
   static const int _maxAllowedSeats = 8;
 
   @override
@@ -37,16 +35,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadPreferences() async {
     final repo = widget.serviceLocator.ridePreferenceRepository;
-    final locationsRepo = widget.serviceLocator.locationsRepository;
     final selected = await repo.getSelectedPreference();
     final history = await repo.getPreferenceHistory();
-    final locations = await locationsRepo.getAvailableLocations();
 
     if (!mounted) return;
     setState(() {
       _selectedPreference = selected;
       _preferenceHistory = history;
-      _availableLocations = locations;
     });
   }
 
@@ -98,8 +93,8 @@ class _HomeScreenState extends State<HomeScreen> {
               // 2 - THE FORM
               BlaRidePreferencePicker(
                 initRidePreference: _selectedPreference,
-                availableLocations: _availableLocations,
                 maxSeat: _maxAllowedSeats,
+                serviceLocator: widget.serviceLocator,
                 onRidePreferenceSelected: onRidePrefSelected,
               ),
               SizedBox(height: BlaSpacings.m),

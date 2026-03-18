@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../model/ride/locations.dart';
 import '../../../model/ride/ride.dart';
 import '../../../model/ride_pref/ride_pref.dart';
 import '../../../utils/animations_util.dart' show AnimationUtils;
 import '../../theme/theme.dart';
-import 'widgets/ride_preference_modal.dart';
+import '../../widgets/pickers/location/bla_ride_preference_modal.dart';
 import 'widgets/rides_selection_header.dart';
 import 'widgets/rides_selection_tile.dart';
 import 'package:blabla/main_common.dart';
@@ -25,7 +24,6 @@ class RidesSelectionScreen extends StatefulWidget {
 class _RidesSelectionScreenState extends State<RidesSelectionScreen> {
   RidePreference? _selectedPreference;
   List<Ride> _matchingRides = [];
-  List<Location> _availableLocations = [];
   static const int _maxAllowedSeats = 8;
 
   @override
@@ -37,16 +35,13 @@ class _RidesSelectionScreenState extends State<RidesSelectionScreen> {
   Future<void> _loadData() async {
     final prefsRepo = widget.serviceLocator.ridePreferenceRepository;
     final ridesRepo = widget.serviceLocator.ridesRepository;
-    final locationsRepo = widget.serviceLocator.locationsRepository;
 
     final selected = await prefsRepo.getSelectedPreference();
-    final locations = await locationsRepo.getAvailableLocations();
     if (selected == null) {
       if (!mounted) return;
       setState(() {
         _selectedPreference = null;
         _matchingRides = [];
-        _availableLocations = locations;
       });
       return;
     }
@@ -56,7 +51,6 @@ class _RidesSelectionScreenState extends State<RidesSelectionScreen> {
     setState(() {
       _selectedPreference = selected;
       _matchingRides = rides;
-      _availableLocations = locations;
     });
   }
   void onBackTap() {
@@ -85,8 +79,8 @@ class _RidesSelectionScreenState extends State<RidesSelectionScreen> {
           AnimationUtils.createRightToLeftRoute(
             RidePreferenceModal(
               initialPreference: currentPreference,
-              availableLocations: _availableLocations,
               maxSeat: _maxAllowedSeats,
+              serviceLocator: widget.serviceLocator,
             ),
           ),
         );

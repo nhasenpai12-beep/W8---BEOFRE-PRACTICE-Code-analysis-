@@ -1,26 +1,25 @@
-import 'package:blabla/ui/widgets/pickers/bla_ride_preference_picker.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../main_common.dart';
 import '../../../../model/ride_pref/ride_pref.dart';
-import '../../../../model/ride/locations.dart';
 import '../../../theme/theme.dart';
-import '../../../widgets/buttons/bla_icon_button.dart';
-
+import '../../buttons/bla_icon_button.dart';
+import '../ride_preference/bla_ride_preference_picker.dart';
 
 //
-// Wrap the ride preference picker within a modal 
+// Wrap the ride preference picker within a modal
 //
 class RidePreferenceModal extends StatefulWidget {
   const RidePreferenceModal({
     super.key,
     required this.initialPreference,
-    required this.availableLocations,
     required this.maxSeat,
+    required this.serviceLocator,
   });
 
   final RidePreference? initialPreference;
-  final List<Location> availableLocations;
   final int maxSeat;
+  final ServiceLocator serviceLocator;
 
   @override
   State<RidePreferenceModal> createState() => _RidePreferenceModalState();
@@ -63,8 +62,8 @@ class _RidePreferenceModalState extends State<RidePreferenceModal> {
                 padding: const EdgeInsets.all(10),
                 child: BlaRidePreferencePicker(
                   initRidePreference: widget.initialPreference,
-                  availableLocations: widget.availableLocations,
                   maxSeat: widget.maxSeat,
+                  serviceLocator: widget.serviceLocator,
                   onRidePreferenceSelected: onRidePreferenceSelected,
                 ),
               ),

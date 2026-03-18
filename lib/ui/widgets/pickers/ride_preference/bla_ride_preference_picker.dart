@@ -2,14 +2,15 @@ import 'package:blabla/ui/widgets/buttons/bla_button.dart';
 import 'package:blabla/ui/widgets/display/bla_divider.dart';
 import 'package:flutter/material.dart';
 
-import '../../../model/ride/locations.dart';
-import '../../../model/ride_pref/ride_pref.dart';
-import '../../../utils/animations_util.dart';
-import '../../../utils/date_time_utils.dart';
-import '../../theme/theme.dart';
-import '../buttons/bla_icon_button.dart';
-import 'bla_location_picker.dart';
-import 'bla_seat_picker.dart';
+import '../../../../main_common.dart';
+import '../../../../model/ride/locations.dart';
+import '../../../../model/ride_pref/ride_pref.dart';
+import '../../../../utils/animations_util.dart';
+import '../../../../utils/date_time_utils.dart';
+import '../../../theme/theme.dart';
+import '../../buttons/bla_icon_button.dart';
+import '../location/bla_location_picker.dart';
+import '../seat/bla_seat_picker.dart';
 
 ///
 /// A  RidePreference Picker is a view to pick a RidePreference:
@@ -20,14 +21,14 @@ import 'bla_seat_picker.dart';
 ///
 class BlaRidePreferencePicker extends StatefulWidget {
   final RidePreference? initRidePreference; // optional initial preference.
-  final List<Location> availableLocations;
   final int maxSeat;
+  final ServiceLocator serviceLocator;
 
   const BlaRidePreferencePicker({
     super.key,
     this.initRidePreference,
-    required this.availableLocations,
     this.maxSeat = 8,
+    required this.serviceLocator,
     required this.onRidePreferenceSelected,
   });
 
@@ -85,7 +86,7 @@ class _BlaRidePreferencePickerState extends State<BlaRidePreferencePicker> {
       AnimationUtils.createBottomToTopRoute(
         BlaLocationPicker(
           initLocation: departure,
-          availableLocations: widget.availableLocations,
+          serviceLocator: widget.serviceLocator,
         ),
       ),
     );
@@ -104,7 +105,7 @@ class _BlaRidePreferencePickerState extends State<BlaRidePreferencePicker> {
       AnimationUtils.createBottomToTopRoute(
         BlaLocationPicker(
           initLocation: arrival,
-          availableLocations: widget.availableLocations,
+          serviceLocator: widget.serviceLocator,
         ),
       ),
     );
@@ -269,16 +270,33 @@ class RidePrefInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      onTap: onPressed,
-      title: Text(
-        title,
-        style: BlaTextStyles.button.copyWith(fontSize: 14, color: textColor),
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        padding: EdgeInsets.all(0),
+        alignment: Alignment.centerLeft,
       ),
-      leading: Icon(leftIcon, size: BlaSize.icon, color: BlaColors.iconLight),
-      trailing: rightIcon != null
-          ? BlaIconButton(icon: rightIcon, onPressed: onRightIconPressed)
-          : null,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: BlaSpacings.s),
+        child: Row(
+          children: [
+            Icon(leftIcon, color: BlaColors.textLight),
+            SizedBox(width: BlaSpacings.m),
+            Expanded(
+              child: Text(
+                title,
+                style: BlaTextStyles.body.copyWith(color: textColor),
+              ),
+            ),
+            rightIcon != null
+                ? BlaIconButton(
+                    icon: rightIcon,
+                    onPressed: onRightIconPressed,
+                  )
+                : SizedBox.shrink(),
+          ],
+        ),
+      ),
     );
   }
 }

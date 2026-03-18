@@ -1,8 +1,9 @@
+import 'package:blabla/main_common.dart';
 import 'package:blabla/ui/widgets/display/bla_divider.dart';
 import 'package:flutter/material.dart';
 
-import '../../../model/ride/locations.dart';
-import '../../theme/theme.dart';
+import '../../../../model/ride/locations.dart';
+import '../../../theme/theme.dart';
 
 ///
 /// A  Location Picker is a view to pick a Location:
@@ -11,11 +12,11 @@ class BlaLocationPicker extends StatefulWidget {
   const BlaLocationPicker({
     super.key,
     required this.initLocation,
-    required this.availableLocations,
+    required this.serviceLocator,
   });
 
   final Location? initLocation; // optional initial location
-  final List<Location> availableLocations;
+  final ServiceLocator serviceLocator;
 
   @override
   State<BlaLocationPicker> createState() => _BlaLocationPickerState();
@@ -23,6 +24,8 @@ class BlaLocationPicker extends StatefulWidget {
 
 class _BlaLocationPickerState extends State<BlaLocationPicker> {
   String currentSearchText = "";
+  List<Location> _availableLocations = [];
+  bool _isLoading = true;
 
   void onTap(Location location) {
     Navigator.pop<Location>(context, location);
@@ -38,10 +41,21 @@ class _BlaLocationPickerState extends State<BlaLocationPicker> {
 
     // Initilize the search bar if any initial location
     if (widget.initLocation != null) {
-      setState(() {
-        currentSearchText = widget.initLocation!.name;
-      });
+      currentSearchText = widget.initLocation!.name;
     }
+
+    _loadLocations();
+  }
+
+  Future<void> _loadLocations() async {
+    final locations =
+        await widget.serviceLocator.locationsRepository.getAvailableLocations();
+
+    if (!mounted) return;
+    setState(() {
+      _availableLocations = locations;
+      _isLoading = false;
+    });
   }
 
   void onSearchChanged(String search) {
@@ -54,7 +68,7 @@ class _BlaLocationPickerState extends State<BlaLocationPicker> {
     if (currentSearchText.length < 2) {
       return [];
     }
-    return widget.availableLocations
+    return _availableLocations
         .where(
           (location) => location.name.toUpperCase().contains(
             currentSearchText.toUpperCase(),
@@ -65,6 +79,12 @@ class _BlaLocationPickerState extends State<BlaLocationPicker> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.only(

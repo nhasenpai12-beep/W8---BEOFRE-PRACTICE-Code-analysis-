@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/theme.dart';
-import '../buttons/bla_circle_button.dart';
-import '../buttons/bla_icon_button.dart';
+import '../../../theme/theme.dart';
+import '../../buttons/bla_circle_button.dart';
+import '../../buttons/bla_icon_button.dart';
 
 class BlaSeatPicker extends StatefulWidget {
   const BlaSeatPicker({super.key, this.initSeats, required this.maxSeat});
@@ -26,7 +26,7 @@ class _BlaSeatPickerState extends State<BlaSeatPicker> {
   }
 
   void onMinus() {
-    if (selectedSeat >1) {
+    if (selectedSeat > 1) {
       setState(() => selectedSeat--);
     }
   }
@@ -85,7 +85,7 @@ class _BlaSeatPickerState extends State<BlaSeatPicker> {
                 BlaCircleButton(
                   icon: Icons.add,
                   type: CircleButtonType.secondary,
-                   disabled: plusDisabled,
+                  disabled: plusDisabled,
                   onPressed: onPlus,
                 ),
               ],
