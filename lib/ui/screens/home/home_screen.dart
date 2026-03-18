@@ -1,5 +1,6 @@
+import 'package:blabla/main_common.dart';
+import 'package:blabla/model/ride/locations.dart';
 import 'package:blabla/model/ride_pref/ride_pref.dart';
-import 'package:blabla/services/ride_prefs_service.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/animations_util.dart';
 import '../../theme/theme.dart';
@@ -15,24 +16,54 @@ const String blablaHomeImagePath = 'assets/images/blabla_home.png';
 /// - Or select a last entered ride preferences and launch a search on it
 ///
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final ServiceLocator serviceLocator;
+  const HomeScreen({super.key, required this.serviceLocator});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  RidePreference? _selectedPreference;
+  List<RidePreference> _preferenceHistory = [];
+  List<Location> _availableLocations = [];
+  static const int _maxAllowedSeats = 8;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    final repo = widget.serviceLocator.ridePreferenceRepository;
+    final locationsRepo = widget.serviceLocator.locationsRepository;
+    final selected = await repo.getSelectedPreference();
+    final history = await repo.getPreferenceHistory();
+    final locations = await locationsRepo.getAvailableLocations();
+
+    if (!mounted) return;
+    setState(() {
+      _selectedPreference = selected;
+      _preferenceHistory = history;
+      _availableLocations = locations;
+    });
+  }
+
   void onRidePrefSelected(RidePreference selectedPreference) async {
-    // 1- Ask the service to update the current preference
-    RidePrefsService.selectPreference(selectedPreference);
+    // 1- Save the preference via repository
+    await widget.serviceLocator.ridePreferenceRepository
+        .savePreference(selectedPreference);
 
     // 2 - Navigate to the rides screen
-    await Navigator.of(
-      context,
-    ).push(AnimationUtils.createBottomToTopRoute(RidesSelectionScreen()));
+    await Navigator.of(context).push(
+      AnimationUtils.createBottomToTopRoute(
+        RidesSelectionScreen(serviceLocator: widget.serviceLocator),
+      ),
+    );
 
     // 3 - After wait  - Update the state   - TODO Improve this with proper state managagement
-    setState(() {});
+    await _loadPreferences();
   }
 
   @override
@@ -66,7 +97,9 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               // 2 - THE FORM
               BlaRidePreferencePicker(
-                initRidePreference: RidePrefsService.selectedPreference,
+                initRidePreference: _selectedPreference,
+                availableLocations: _availableLocations,
+                maxSeat: _maxAllowedSeats,
                 onRidePreferenceSelected: onRidePrefSelected,
               ),
               SizedBox(height: BlaSpacings.m),
@@ -82,8 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHistory() {
     // Reverse the history of preferences
-    List<RidePreference> history = RidePrefsService.preferenceHistory.reversed
-        .toList();
+    List<RidePreference> history = _preferenceHistory.reversed.toList();
     return SizedBox(
       height: 200, // Set a fixed height
       child: ListView.builder(

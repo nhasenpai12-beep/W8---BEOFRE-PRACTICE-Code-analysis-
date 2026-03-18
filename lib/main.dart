@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'ui/screens/home/home_screen.dart';
 import 'ui/theme/theme.dart';
+import 'service_locator.dart'; // Add the correct import path for ServiceLocator
 
 void main() {
    runApp(const BlaBlaApp()); 
